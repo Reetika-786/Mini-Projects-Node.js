@@ -4,10 +4,10 @@ const express = require('express');
 
 const totalCPUs = os.cpus().length;
 
-// cluster.isPrimary
+// cluster.isPrimary 
 // Node.js has a single primary process (sometimes called master) and multiple worker processes.
 // cluster.isPrimary checks if the current process is the primary process.
-// Only the primary process should spawn worker processes.
+// Only the primary process should spawn worker processes!!
 
 if(cluster.isPrimary){
     for(let i=0; i<totalCPUs; i++){
