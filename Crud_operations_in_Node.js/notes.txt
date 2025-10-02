@@ -1,0 +1,160 @@
+//routes for saving in local storage
+
+
+app.get("/users", (req, res)=>{
+  const html = `
+  <ul>
+  ${users.map((user) => `<li>${user.first_name}</li>`).join("")}
+  </ul>
+  `;
+  res.send(html);
+})
+
+//rest api
+
+app.get('/api/users', (req, res)=>{
+    res.json(users);
+})
+
+// //getting user by id statically
+// app.get('/api/users/1', (req, res)=>{
+//   res.json(users[0]);
+// })
+
+//getting user by id dynamically
+app.get('/api/users/:id' , (req, res)=>{
+  const id = Number(req.params.id);
+  const user = users.find((user) =>
+    user.id === id);
+    return res.json(user);
+})
+
+// //post req:
+// app.post('/api/users/:id', (req, res) =>{
+//   //create users
+//   return res.json({status: "pending"});
+// })
+
+// //patch req:
+// app.patch('/api/users/:id', (req, res) =>{
+//   //edit users
+//   return res.json({status: "pending"});
+// })
+
+// //delete req:
+// app.delete('/api/users/:id', (req, res) =>{
+//   //delete users
+//   return res.json({status: "pending"});
+// })
+
+
+
+//now these are requests for same routes,so we can do grouping:
+
+app.route('/api/users/:id')
+  .get((req, res)=>{
+    const id = Number(req.params.id);
+    const user = users.find((user) =>
+    user.id === id);
+    return res.json(user);
+  })
+  .patch((req, res) => {
+    //edit user with id
+    res.json({status: "pending"});
+  })
+  .delete((req, res) =>{
+    //delete user with id
+    res.json({status: "pending"});
+  });
+
+
+
+//post req to create user
+
+app.post('/api/users',(req, res)=>{
+  const body = req.body;
+  users.push({...body, id:users.length + 1});
+  fs.writeFile('/MOCK_DATA.json',JSON.stringify(users), (err, data)=>{
+    return res.json({status: "success", id: users.length});
+  })
+})
+
+app.delete('/api/users/:id',(req, res)=>{
+  const userid = parseInt(req.params.id);
+
+  const userIndex = users.findIndex(user =>user.id === userid);
+  if(userIndex === -1){
+    return res.status(404).json({status: "error", message : "user not found"});
+  }
+
+  //remove user
+  users.splice(userIndex, 1);
+
+  //save updated users to 
+  // file
+  fs.writeFile('MOCK_DATA.json', JSON.stringify(users), (err) => {
+    if(err){
+      return res.status(500).json({status: "error", message: "internal server error"});
+    }
+    return res.json({status:"success", message:"user deleted successfully"});
+});
+});
+
+
+
+//crud operations in mongodb
+app.post("/api/mongo/users", async (req, res) =>{
+    const body = req.body; 
+    const res = await User.create(body);
+    return res.json({status: "success", id: res._id});
+})
+
+//read
+// Find all
+const users = await User.find();
+console.log(users);
+
+// Find one
+const alice = await User.findOne({ name: "Alice" });
+
+// Find by ID
+const userById = await User.findById("64f1c9d2eabc1234567890ab");
+
+// Filter + Projection + Sorting
+const filtered = await User.find({ age: { $gte: 20 } })
+                          .select("name age -_id")   // only name & age, exclude _id
+                          .sort({ age: -1 })         // sort by age desc
+                          .limit(5);                 // first 5 results
+
+
+
+//update
+// Update one document
+await User.updateOne(
+  { name: "Alice" },
+  { $set: { age: 26 } }
+);
+
+// Update many
+await User.updateMany(
+  { age: { $lt: 30 } },
+  { $inc: { age: 1 } }  // increment age by 1
+);
+
+// Find + Update + Return new document
+const updatedUser = await User.findOneAndUpdate(
+  { name: "Bob" },
+  { age: 35 },
+  { new: true }  // return updated document
+);
+
+
+//delete
+// Delete one
+await User.deleteOne({ name: "Alice" });
+
+// Delete many
+await User.deleteMany({ age: { $gt: 40 } });
+
+// Find by ID and delete
+await User.findByIdAndDelete("64f1c9d2eabc1234567890ab");

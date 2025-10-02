@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #222;
+      color: white;
+    }
+    #msgs {
+      margin-top: 20px;
+      max-width: 400px;
+    }
+    .message {
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin: 5px 0;
+      width: fit-content;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+    .my-message {
+      background: grey;
+      margin-left: auto;
+      text-align: right;
+    }
+    .other-message {
+      background: #444;
+      margin-right: auto;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chatting</h1>
+  <input type="text" id="message" placeholder="Type a message..." />
+  <button id="sendBtn">Send</button>
+  <div id="msgs"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const sendBtn = document.getElementById("sendBtn");
+    const messageInput = document.getElementById("message");
+    const allMessages = document.getElementById("msgs");
+
+    // Listen for messages
+    socket.on("chat message", ({ msg, senderId }) => {
+      const div = document.createElement("div");
+      div.classList.add("message");
+
+      if (senderId === socket.id) {
+        div.classList.add("my-message");
+      } else {
+        div.classList.add("other-message");
+      }
+
+      div.innerText = msg;
+      allMessages.appendChild(div);
+    });
+
+    // Send message
+    sendBtn.addEventListener("click", () => {
+      const message = messageInput.value.trim();
+      if (message) {
+        socket.emit("chat message", { msg: message });
+        messageInput.value = "";
+      }
+    });
+
+    // Send on Enter
+    messageInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendBtn.click();
+    });
+  </script>
+</body>
+</html>
