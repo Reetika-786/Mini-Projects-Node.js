@@ -24,5 +24,5 @@ app.use(logReqRes('log.txt'));
 app.use("/api/user", userRouter)
 
 app.listen(port, () => {
-  console.log(`server started on port ${port}`);
+  console.log(`server started on port: ${port}`);
 });
